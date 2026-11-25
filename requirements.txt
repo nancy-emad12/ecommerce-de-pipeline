@@ -1,0 +1,4 @@
+# Must match the Spark version of the cluster image (docker/spark/Dockerfile)
+pyspark==4.0.1
+apache-airflow-providers-apache-spark
+apache-airflow-providers-postgres

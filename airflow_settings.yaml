@@ -1,0 +1,18 @@
+# Loaded by `astro dev start` (local development only).
+airflow:
+  connections:
+    - conn_id: spark_default
+      conn_type: spark
+      conn_host: spark://spark-master
+      conn_port: 7077
+      conn_extra:
+        deploy-mode: client
+    - conn_id: dwh_postgres
+      conn_type: postgres
+      conn_host: dwh-postgres
+      conn_port: 5432
+      conn_schema: ecommerce_dwh
+      conn_login: dwh
+      conn_password: dwh
+  pools: []
+  variables: []

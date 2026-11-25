@@ -1,0 +1,25 @@
+# Astro / Airflow
+.astro/test_dags_list.txt
+.env
+airflow_settings.local.yaml
+logs/
+airflow.db
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Data: full dataset and the generated lake stay on your machine
+include/data/raw/*
+!include/data/raw/README.md
+include/data/lake/*
+!include/data/lake/.gitkeep
+*.zip
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

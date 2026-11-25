@@ -1,0 +1,9 @@
+astro
+.git
+.env
+airflow_settings.yaml
+logs/
+.venv
+include/data/raw
+include/data/lake
+docs/
