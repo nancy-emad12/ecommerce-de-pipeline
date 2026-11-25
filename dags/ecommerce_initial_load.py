@@ -56,6 +56,9 @@ SPARK_CONF = {
     "spark.executor.cores": "2",
     "spark.sql.shuffle.partitions": "8",
     "spark.sql.session.timeZone": "UTC",
+    # Lake folders are written by the driver (Airflow) and the executors (Spark containers):
+    # create them world-writable so either side can rename / clean them up.
+    "spark.hadoop.fs.permissions.umask-mode": "000",
 }
 
 log = logging.getLogger(__name__)

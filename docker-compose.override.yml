@@ -2,29 +2,52 @@
 # Astro's own containers (scheduler, api-server, dag-processor, triggerer, postgres)
 # live on the "airflow" network; everything here joins the same network.
 #
-# Host ports:  Airflow UI 8080 | Spark master UI 8090 | Spark worker UI 8091 | DWH Postgres 5433
+# Host ports:  Airflow UI (shown by `astro dev start`) | Spark master UI 8090 | Spark worker UI 8091 | DWH Postgres 5433
+#
+# NOTE: `astro dev start` does not build images listed here. Build the Spark image first:
+#   docker build -t ecommerce-spark:4.0.1 ./docker/spark      (or run scripts/start.ps1 / scripts/start.sh)
+#
+# The data lake lives in a Docker named volume ("lake"), not in the Windows/OneDrive folder:
+# Spark commits files by renaming folders, which fails on Windows bind mounts.
+# The volume is mounted at the same path in Airflow (scheduler) and in Spark, so paths stay identical.
 services:
+  lake-init:
+    image: ecommerce-spark:4.0.1
+    user: root
+    command: sh -c "mkdir -p /lake && chown -R 50000:0 /lake && chmod -R 0777 /lake"
+    volumes:
+      - lake:/lake
+    networks:
+      - airflow
+
+  scheduler:
+    volumes:
+      - lake:/usr/local/airflow/include/data/lake
+
   spark-master:
-    build: ./docker/spark
     image: ecommerce-spark:4.0.1
     command: spark-class org.apache.spark.deploy.master.Master --host spark-master --port 7077 --webui-port 8080
+    depends_on:
+      lake-init:
+        condition: service_completed_successfully
     ports:
       - "8090:8080"
     volumes:
       - ./include:/usr/local/airflow/include
+      - lake:/usr/local/airflow/include/data/lake
     networks:
       - airflow
 
   spark-worker:
-    build: ./docker/spark
     image: ecommerce-spark:4.0.1
-    command: spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077 --cores 2 --memory 2g --webui-port 8081
+    command: spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077 --cores 2 --memory 2g --webui-port 8081 --work-dir /tmp/spark-work
     depends_on:
       - spark-master
     ports:
       - "8091:8081"
     volumes:
-      - ./include:/usr/local/airflow/include   # same path as in Airflow -> same file paths everywhere
+      - ./include:/usr/local/airflow/include   # same paths as in Airflow
+      - lake:/usr/local/airflow/include/data/lake
     networks:
       - airflow
 
@@ -43,3 +66,4 @@ services:
 
 volumes:
   dwh_pgdata:
+  lake:

@@ -17,6 +17,7 @@ Decisions taken by the team, newest last. Each one says what changed compared wi
 | 11 | 2026-11-25 | SCD type for customer / product / seller decided in the incremental phase | Not needed for a single full load |
 | 12 | 2026-11-25 | Postgres types: `TINYINT` → `SMALLINT`; `product_category_name_english` widened to `VARCHAR(60)` | Postgres has no TINYINT; untranslated categories keep their Portuguese name |
 | 13 | 2026-11-25 | Unknown member (key `-1`) in every dimension | Missing dates (≈3k undelivered orders), 278 customer zips not in geolocation, orders without reviews |
+| 14 | 2026-11-25 | Lake stored in a **Docker named volume** mounted at `include/data/lake` in Airflow and Spark; Spark runs as uid 50000 (same as Airflow's `astro` user) | First run on Windows failed: Spark's file committer could not rename folders on the Windows/OneDrive bind mount |
 
 ## Cleaning rules (silver)
 

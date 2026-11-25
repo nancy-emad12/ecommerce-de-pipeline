@@ -9,8 +9,13 @@ RUN apt-get update \
 
 RUN pip install --no-cache-dir pyspark==4.0.1 pandas pyarrow
 
+# Run Spark as uid 50000 = the "astro" user of the Airflow containers, so the Spark driver
+# (in Airflow) and the executors (here) can rename / delete each other's files in the lake.
+RUN useradd --uid 50000 --gid 0 --create-home --shell /bin/bash spark
+
 ENV JAVA_HOME=/usr/lib/jvm/default-java \
     PYSPARK_PYTHON=python3 \
     SPARK_NO_DAEMONIZE=true
 
-WORKDIR /usr/local/airflow
+USER 50000
+WORKDIR /home/spark

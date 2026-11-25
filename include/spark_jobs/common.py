@@ -125,6 +125,7 @@ def get_spark(app_name: str) -> SparkSession:
         .config("spark.sql.session.timeZone", "UTC")
         .config("spark.sql.shuffle.partitions", os.getenv("SPARK_SHUFFLE_PARTITIONS", "8"))
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
+        .config("spark.hadoop.fs.permissions.umask-mode", "000")
     )
     if os.getenv("SPARK_MASTER"):
         builder = builder.master(os.environ["SPARK_MASTER"])

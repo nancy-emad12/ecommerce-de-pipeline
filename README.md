@@ -72,15 +72,22 @@ Prerequisites: Docker Desktop (WSL 2 on Windows, about 8 GB RAM for Docker) and 
 git clone <repo-url> && cd ecommerce-de-pipeline
 
 # 1. put the 9 Olist CSV files in include/data/raw/  (see include/data/raw/README.md)
-# 2. start everything
-astro dev start
+# 2. build the Spark image (first time only, or after changing docker/spark) and start everything
+./scripts/start.ps1        # Windows PowerShell
+./scripts/start.sh         # macOS / Linux / Git Bash
 ```
+
+`astro dev start` does not build the images of the extra services, so the scripts build `ecommerce-spark:4.0.1` first.
+Same thing by hand: `docker build -t ecommerce-spark:4.0.1 ./docker/spark` then `astro dev start`.
 
 3. Open http://localhost:8080 and trigger **`ecommerce_initial_load`**. `end_date` defaults to `2017-12-31`.
 4. Check the results:
    * Spark UI: http://localhost:8090
    * DWH: `psql -h localhost -p 5433 -U dwh -d ecommerce_dwh` (password `dwh`), e.g. `SELECT * FROM dwh.vw_sales_daily LIMIT 10;`
-   * Reports: `include/data/lake/_reports/*.json` (row counts, validation, data-quality results)
+   * Reports (row counts, validation, data-quality results) are in the lake, which is a Docker volume (Spark cannot
+     commit files on Windows/OneDrive folders). List them with:
+     `docker run --rm -v ecommerce-de-pipeline_<id>_lake:/lake ecommerce-spark:4.0.1 ls /lake/_reports`
+     (`docker volume ls` shows the exact volume name)
 
 Expected result for `end_date = 2017-12-31`: 45,430 orders → **51,234 rows in fact_sales**, **47,871 rows in fact_payments**,
 and all 30 data-quality checks passing.
@@ -98,7 +105,7 @@ include/sql/views/         Analytical views
 include/dq/                Data-quality checks run after each load
 include/data/raw/          Full dataset (git-ignored)
 include/data/sample/       Small sample of every source file (committed)
-include/data/lake/         Bronze / Silver / Gold / quarantine / reports (git-ignored, generated)
+include/data/lake/         Bronze / Silver / Gold / quarantine / reports (Docker volume "lake" when running with Astro)
 docker/spark/              Spark cluster image
 docker-compose.override.yml  Spark + DWH Postgres, started with Airflow by Astro
 airflow_settings.yaml      Local Airflow connections (spark_default, dwh_postgres)
